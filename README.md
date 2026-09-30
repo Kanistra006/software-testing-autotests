@@ -1,5 +1,7 @@
 # Автотесты по курсу «Тестирование программного обеспечения»
 
+[![Run tests](https://github.com/Kanistra006/software-testing-autotests/actions/workflows/run-tests.yml/badge.svg)](https://github.com/Kanistra006/software-testing-autotests/actions/workflows/run-tests.yml)
+
 Автотесты из лабораторных работ, которые автоматически запускаются в GitHub Actions при каждом push
 (`.github/workflows/run-tests.yml`).
 
