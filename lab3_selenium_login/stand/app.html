@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Мои задачи — TaskFlow</title>
+<link rel="stylesheet" href="stand.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="logo">TaskFlow</div>
+  <div class="user-box">
+    <span class="avatar" aria-hidden="true"></span>
+    <span id="current-user" data-testid="current-user"></span>
+    <button id="logout" name="logout" class="btn btn-light" data-testid="logout">Выйти</button>
+  </div>
+</header>
+
+<main class="center">
+  <div class="card wide">
+    <h1 id="welcome"></h1>
+    <p class="sub">Задачи на сегодня</p>
+    <ul class="tasks">
+      <li>Подготовить отчёт по ЛР3</li>
+      <li>Написать автотест входа</li>
+      <li>Проанализировать селекторы</li>
+    </ul>
+  </div>
+</main>
+
+<script>
+const user = JSON.parse(sessionStorage.getItem("taskflow.user") || "null");
+if (!user) {
+  location.replace("login.html");
+} else {
+  document.getElementById("current-user").textContent = user.login;
+  document.getElementById("welcome").textContent = `Добро пожаловать, ${user.name}!`;
+  document.querySelector(".avatar").textContent = user.name[0];
+}
+document.getElementById("logout").addEventListener("click", () => {
+  sessionStorage.removeItem("taskflow.user");
+  location.href = "login.html?logout=1";
+});
+</script>
+</body>
+</html>

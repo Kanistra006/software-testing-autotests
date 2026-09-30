@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Обратная связь — TaskFlow</title>
+<link rel="stylesheet" href="stand.css">
+<link rel="stylesheet" href="contact.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="logo">TaskFlow</div>
+  <nav><a href="#" class="nav-link">О сервисе</a><a href="#" class="nav-link">Обратная связь</a></nav>
+</header>
+
+<main class="center">
+  <div class="card form-card">
+    <form id="contact-form" name="contact" novalidate data-testid="contact-form">
+      <h1>Обратная связь</h1>
+      <p class="sub">Поля, отмеченные <span class="req">*</span>, обязательны</p>
+
+      <div class="field">
+        <label for="name">Имя <span class="req">*</span></label>
+        <input id="name" name="name" type="text" autocomplete="name" data-testid="name">
+        <div class="error" id="name-error" data-testid="name-error" aria-live="polite"></div>
+      </div>
+
+      <div class="field">
+        <label for="email">Email <span class="req">*</span></label>
+        <input id="email" name="email" type="email" autocomplete="email" data-testid="email">
+        <div class="error" id="email-error" data-testid="email-error" aria-live="polite"></div>
+      </div>
+
+      <div class="field">
+        <label for="phone">Телефон</label>
+        <input id="phone" name="phone" type="tel" autocomplete="tel" placeholder="+7 900 123-45-67" data-testid="phone">
+        <div class="error" id="phone-error" data-testid="phone-error" aria-live="polite"></div>
+      </div>
+
+      <div class="field">
+        <label for="subject">Тема <span class="req">*</span></label>
+        <select id="subject" name="subject" data-testid="subject">
+          <option value="">Выберите тему</option>
+          <option value="question">Вопрос</option>
+          <option value="bug">Сообщение об ошибке</option>
+          <option value="idea">Предложение</option>
+        </select>
+        <div class="error" id="subject-error" data-testid="subject-error" aria-live="polite"></div>
+      </div>
+
+      <div class="field">
+        <label for="message">Сообщение <span class="req">*</span></label>
+        <textarea id="message" name="message" rows="5" maxlength="1000" data-testid="message"></textarea>
+        <div class="counter" id="message-counter" data-testid="message-counter">0/1000</div>
+        <div class="error" id="message-error" data-testid="message-error" aria-live="polite"></div>
+      </div>
+
+      <div class="field">
+        <label class="consent"><input id="consent" name="consent" type="checkbox" data-testid="consent">
+          Я согласен на обработку персональных данных <span class="req">*</span></label>
+        <div class="error" id="consent-error" data-testid="consent-error" aria-live="polite"></div>
+      </div>
+
+      <button type="submit" id="submit" class="btn btn-primary" data-testid="submit">Отправить</button>
+    </form>
+
+    <div id="success" class="success" data-testid="success" hidden>
+      <div class="success-icon">✓</div>
+      <h2 id="success-title" data-testid="success-title">Обращение отправлено</h2>
+      <p id="success-message" data-testid="success-message"></p>
+      <button type="button" id="send-another" class="btn btn-light" data-testid="send-another">Отправить ещё одно обращение</button>
+    </div>
+  </div>
+</main>
+
+<script>
+const form = document.getElementById("contact-form");
+const submitBtn = document.getElementById("submit");
+const success = document.getElementById("success");
+const messageEl = document.getElementById("message");
+const counter = document.getElementById("message-counter");
+
+const NAME_RE = /^[A-Za-zА-Яа-яЁё]+(?:[ -][A-Za-zА-Яа-яЁё]+)*$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const PHONE_RE = /^(\+7|8)\d{10}$/;
+
+// Правила проверки: возвращают текст ошибки или "" — поле корректно
+const RULES = {
+  name(v) {
+    v = v.trim();
+    if (!v) return "Введите имя";
+    if (v.length < 2 || v.length > 50 || !NAME_RE.test(v)) return "Имя: от 2 до 50 букв, допускаются пробел и дефис";
+    return "";
+  },
+  email(v) {
+    v = v.trim();
+    if (!v) return "Введите email";
+    if (!EMAIL_RE.test(v)) return "Введите корректный email, например name@example.com";
+    return "";
+  },
+  phone(v) {
+    const digits = v.replace(/[\s()-]/g, "");
+    if (!digits) return "";
+    if (!PHONE_RE.test(digits)) return "Телефон в формате +7 900 123-45-67";
+    return "";
+  },
+  subject(v) { return v ? "" : "Выберите тему обращения"; },
+  message(v) {
+    v = v.trim();
+    if (!v) return "Введите сообщение";
+    if (v.length < 10) return "Сообщение: от 10 до 1000 символов";
+    return "";
+  },
+  consent(_, el) { return el.checked ? "" : "Необходимо согласие на обработку персональных данных"; },
+};
+
+function setError(field, text) {
+  const el = form.elements[field];
+  document.getElementById(field + "-error").textContent = text;
+  el.setAttribute("aria-invalid", text ? "true" : "false");
+  el.closest(".field").classList.toggle("has-error", !!text);
+}
+
+function validate() {
+  let firstInvalid = null;
+  for (const [field, rule] of Object.entries(RULES)) {
+    const el = form.elements[field];
+    const err = rule(el.value, el);
+    setError(field, err);
+    if (err && !firstInvalid) firstInvalid = el;
+  }
+  return firstInvalid;
+}
+
+// Ошибка поля убирается, как только значение становится корректным
+for (const field of Object.keys(RULES)) {
+  const el = form.elements[field];
+  el.addEventListener(el.type === "checkbox" || el.tagName === "SELECT" ? "change" : "input", () => {
+    if (el.closest(".field").classList.contains("has-error") && !RULES[field](el.value, el)) setError(field, "");
+  });
+}
+
+messageEl.addEventListener("input", () => { counter.textContent = `${messageEl.value.length}/1000`; });
+
+form.addEventListener("submit", e => {
+  e.preventDefault();
+  const firstInvalid = validate();
+  if (firstInvalid) { firstInvalid.focus(); return; }
+
+  // имитация отправки на сервер
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Отправка…";
+  setTimeout(() => {
+    const ticket = 1000 + Math.floor(Math.random() * 9000);
+    const name = form.elements.name.value.trim();
+    const email = form.elements.email.value.trim();
+    document.getElementById("success-message").textContent =
+      `Спасибо, ${name}! Ваше обращение № ${ticket} принято. Ответ придёт на ${email}.`;
+    form.hidden = true;
+    success.hidden = false;
+    submitBtn.disabled = false;
+    submitBtn.textContent = "Отправить";
+  }, 800);
+});
+
+document.getElementById("send-another").addEventListener("click", () => {
+  form.reset();
+  counter.textContent = "0/1000";
+  Object.keys(RULES).forEach(f => setError(f, ""));
+  success.hidden = true;
+  form.hidden = false;
+});
+</script>
+</body>
+</html>

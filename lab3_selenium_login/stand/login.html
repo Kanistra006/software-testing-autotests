@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Вход — TaskFlow</title>
+<link rel="stylesheet" href="stand.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="logo">TaskFlow</div>
+  <nav><a href="#" class="nav-link">О сервисе</a><a href="#" class="nav-link">Помощь</a></nav>
+</header>
+
+<main class="center">
+  <div class="sc-a8f3k2 card">
+    <form id="login-form" name="login" novalidate>
+      <h1>Вход в TaskFlow</h1>
+      <p class="sub">Введите логин и пароль, чтобы продолжить</p>
+
+      <div class="notice" data-role="logout-notice" hidden>Вы вышли из системы</div>
+
+      <label for="username">Логин</label>
+      <input id="username" name="username" type="text" autocomplete="username">
+
+      <label for="password">Пароль</label>
+      <input id="password" name="password" type="password" autocomplete="current-password">
+
+      <label class="remember"><input type="checkbox" name="remember"> Запомнить меня</label>
+
+      <button type="submit" class="btn btn-primary">Войти</button>
+
+      <div class="alert alert-error" role="alert" hidden></div>
+
+      <div class="links"><a href="#" class="link-muted">Забыли пароль?</a><a href="#" class="link-muted">Регистрация</a></div>
+    </form>
+  </div>
+  <p class="hint">Тестовая учётная запись стенда: <b>student</b> / <b>Test123!</b></p>
+</main>
+
+<script>
+// Учётные записи стенда (тестовые данные)
+const USERS = {
+  student: { password: "Test123!", name: "Студент", locked: false },
+  locked: { password: "Test123!", name: "Заблокированный", locked: true },
+};
+
+const form = document.getElementById("login-form");
+const button = form.querySelector("button[type=submit]");
+const alertBox = form.querySelector("[role=alert]");
+
+// id кнопки генерируется при каждой загрузке страницы
+button.id = "btn-" + Math.random().toString(36).slice(2, 8);
+
+if (new URLSearchParams(location.search).get("logout") === "1") {
+  document.querySelector("[data-role=logout-notice]").hidden = false;
+}
+if (sessionStorage.getItem("taskflow.user")) location.replace("app.html");
+
+function showError(msg) {
+  alertBox.textContent = msg;
+  alertBox.hidden = false;
+}
+
+form.addEventListener("submit", e => {
+  e.preventDefault();
+  alertBox.hidden = true;
+  const login = form.username.value.trim();
+  const password = form.password.value;
+  if (!login || !password) { showError("Введите логин и пароль"); return; }
+
+  // имитация запроса к серверу
+  button.disabled = true;
+  button.textContent = "Вход…";
+  setTimeout(() => {
+    button.disabled = false;
+    button.textContent = "Войти";
+    const user = USERS[login];
+    if (!user || user.password !== password) { showError("Неверный логин или пароль"); return; }
+    if (user.locked) { showError("Учётная запись заблокирована"); return; }
+    sessionStorage.setItem("taskflow.user", JSON.stringify({ login, name: user.name }));
+    location.href = "app.html";
+  }, 700);
+});
+</script>
+</body>
+</html>

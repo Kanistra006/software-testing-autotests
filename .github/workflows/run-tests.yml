@@ -1,0 +1,71 @@
+# Автоматический запуск автотестов при каждом push и pull request.
+# Три набора тестов выполняются параллельно в отдельных заданиях (матрица).
+name: Run tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:        # ручной запуск со страницы Actions
+
+jobs:
+  tests:
+    name: ${{ matrix.suite.name }}
+    runs-on: ubuntu-latest  # ОС виртуальной машины GitHub (в образе уже есть Google Chrome)
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false      # если упал один набор, остальные всё равно доходят до конца
+      matrix:
+        suite:
+          - name: "ЛР6 — модульные тесты (Calculator)"
+            dir: lab6_unit_tests
+            args: "--cov=calculator --cov-branch --cov-report=term-missing"
+          - name: "ЛР3 — UI-тесты входа (Selenium)"
+            dir: lab3_selenium_login
+            args: ""
+          - name: "ЛР4 — Page Object, форма обратной связи (Selenium)"
+            dir: lab4_page_object
+            args: ""
+
+    env:
+      HEADLESS: "1"         # Chrome без окна: на сервере нет дисплея
+
+    defaults:
+      run:
+        working-directory: ${{ matrix.suite.dir }}
+
+    steps:
+      - name: Получить код репозитория
+        uses: actions/checkout@v7
+
+      - name: Установить Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Установить зависимости
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ../requirements.txt
+
+      - name: Версии окружения
+        run: |
+          python --version
+          pip list | grep -Ei "^(pytest|pytest-cov|selenium|webdriver-manager) "
+          google-chrome --version
+
+      - name: Запустить тесты (pytest)
+        run: python -m pytest ${{ matrix.suite.args }} --junitxml=../reports/${{ matrix.suite.dir }}.xml
+
+      - name: Сохранить отчёт и скриншоты
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: report-${{ matrix.suite.dir }}
+          path: |
+            reports/${{ matrix.suite.dir }}.xml
+            ${{ matrix.suite.dir }}/artifacts/
+          if-no-files-found: ignore

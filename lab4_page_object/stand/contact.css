@@ -1,0 +1,16 @@
+.form-card { max-width: 480px; }
+.req { color: #c62828; }
+.field { margin-bottom: 4px; }
+input[type=email], input[type=tel], select, textarea {
+  width: 100%; font: inherit; padding: 9px 11px; border: 1px solid #cfd6e0; border-radius: 8px; background: #fff;
+}
+textarea { resize: vertical; }
+.field.has-error input, .field.has-error select, .field.has-error textarea { border-color: #d32f2f; background: #fff8f8; }
+.error { min-height: 18px; margin-top: 3px; font-size: 13px; color: #c62828; }
+.counter { text-align: right; font-size: 12px; color: #9aa3b0; margin-top: 2px; }
+label.consent { display: flex; gap: 8px; align-items: flex-start; margin-top: 10px; }
+.success { text-align: center; padding: 12px 0; }
+.success-icon { width: 56px; height: 56px; margin: 0 auto 10px; border-radius: 50%; background: #e3f4e6; color: #2e7d32;
+  font-size: 30px; line-height: 56px; }
+.success h2 { margin: 0 0 8px; }
+.success p { color: #4a5566; margin: 0 0 18px; }
